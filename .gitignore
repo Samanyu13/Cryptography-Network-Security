@@ -1,7 +1,12 @@
 .vscode/
 
-PGP_Authentication/
+PGP_Authentication/c
+
+PGP_Authentication/s
 
 DES_Cipher-Block-Chaining-Mode/
 
 DES_Cipher-Feedback-Mode/
+
+RSA/a.out
+
