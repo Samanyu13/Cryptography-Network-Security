@@ -95,6 +95,22 @@ string alphaStringToHex(string PT) {
     return CPT;
 }
 
+/* 
+ * Finds the transpose of a nxn matrix in a 1D array
+ */
+void transpose(bitset<8> *PT, int n) {
+    bitset<8> temp[n*n];
+    int k = 0;
+    for(int i = 0; i < n; i++) {
+        for(int j = 0; j < n; j++) {
+            temp[k++] = PT[j * n + i];
+        }
+    }
+    for(int i = 0; i < n*n; i++) {
+        PT[i] = temp[i];
+    }
+}
+
 /*
  * Converts a given hex string into its corresponding 
  * binary string.
@@ -133,7 +149,7 @@ string convertHexToBin(string s) {
 	return bin; 
 }
 
-void printPT(bitset<8> PT[16]) {
+void printStateMatrix(bitset<8> PT[16]) {
     for(int i = 0; i < 16; i++) { 
         cout << hex << uppercase << PT[i].to_ulong() << " "; 
         if((i + 1) % 4 == 0) {
@@ -171,7 +187,7 @@ bitset<32> Word(bitset<8>& k1, bitset<8>& k2, bitset<8>& k3, bitset<8>& k4) {
  * return (n << k) | (n >> (size - k))
  */  
 bitset<32> rotWord(bitset<32>& rotate) { 
-    cout << "RotWord: " << hex << uppercase << ((rotate << 8) | (rotate >> 24)).to_ulong() << endl; 
+    // cout << "RotWord: " << hex << uppercase << ((rotate << 8) | (rotate >> 24)).to_ulong() << endl; 
     return (rotate << 8) | (rotate >> 24);  
 }  
   
@@ -188,7 +204,7 @@ bitset<32> subWord(bitset<32>& sw) {
             temp[i+j] = val[j]; 
         }  
     } 
-    cout << "SubWord: " << hex << uppercase << temp.to_ulong() << endl;
+    // cout << "SubWord: " << hex << uppercase << temp.to_ulong() << endl;
     return temp;  
 }  
   
@@ -197,25 +213,28 @@ bitset<32> subWord(bitset<32>& sw) {
  */   
 void keyExpansion(bitset<8> key[4 * nWKey], bitset<32> w[4 * (rounds + 1)]) { 
     bitset<32> temp; 
-    cout << "KEY EXPANSION\n";
+    cout << "********** KEY EXPANSION **********\n";
 
     //The first four of w [] are input keys 
     for(int i = 0; i < nWKey; i++) {
         w[i] = Word(key[4 * i], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]); 
-        cout << "w" << i << ": " << hex << uppercase << w[i].to_ulong() << endl; 
+        cout << "w" << i << ": " << hex << uppercase << w[i].to_ulong() << "\t"; 
     }
 
     for(int i = nWKey; i < (4 * (rounds + 1)); i++) {
         temp = w[i - 1];
-        if(i % 4 == 0) {
+        if(i % 4 == 0) { 
+            cout << "\n";
             bitset<32> rotW = rotWord(temp);
             temp = subWord(rotW) ^ rCon[i/nWKey - 1];
-            cout << "Rcon: " << hex << uppercase << rCon[i/nWKey - 1].to_ulong() << endl; 
+            // cout << "Rcon: " << hex << uppercase << rCon[i/nWKey - 1].to_ulong() << "\t"; 
         }
         w[i] = w[i - nWKey] ^ temp; 
         cout << dec << "w" << i << ": ";
-        cout << hex << uppercase << w[i].to_ulong() << endl; 
+        cout << hex << uppercase << w[i].to_ulong() << "\t"; 
     }
+    cout << "\n\n********** KEY EXPANSION **********\n";
+
 } 
 
 /* 
@@ -229,7 +248,7 @@ void substituteBytes(bitset<8> pt[4 * 4]) {
         pt[i] = subBox[row][col];  
     } 
     cout << endl << "After SubBytes\n"; 
-    printPT(pt);
+    printStateMatrix(pt);
 }  
   
 /* 
@@ -262,7 +281,7 @@ void shiftRows(bitset<8> pt[4 * 4]) {
     pt[12] = temp; 
 
     cout << "After ShiftRows\n";
-    printPT(pt);
+    printStateMatrix(pt);
 } 
   
 /*
@@ -302,7 +321,7 @@ void mixColumns(bitset<8> pt[4 * 4]) {
     } 
 
     cout << "After MixColumns\n";
-    printPT(pt);
+    printStateMatrix(pt);
 }  
   
 /*
@@ -322,7 +341,7 @@ void addRoundKey(bitset<8> pt[4*4], bitset<32> k[4]) {
         pt[i+12] = pt[i+12] ^ bitset<8>(k4.to_ulong()); 
     } 
     cout << "After AddRoundKey\n";
-    printPT(pt);
+    printStateMatrix(pt);
 }  
 
 /* 
@@ -332,10 +351,12 @@ void encryptAES(bitset<8> pt[4 * 4], bitset<32> w[4 * (rounds + 1)]) {
     bitset<32> key[4]; 
     for(int i = 0; i < 4; i++) {
         key[i] = w[i]; 
-    }
+    } 
+    cout << "<<<<<<<< ROUND 0 >>>>>>>>\n\n";
     addRoundKey(pt, key);  
   
-    for(int round = 1; round < rounds; round++) {  
+    for(int round = 1; round < rounds; round++) { 
+    cout << "<<<<<<<< ROUND " << round << " >>>>>>>>\n";
         substituteBytes(pt);  
         shiftRows(pt);  
         mixColumns(pt);  
@@ -343,8 +364,9 @@ void encryptAES(bitset<8> pt[4 * 4], bitset<32> w[4 * (rounds + 1)]) {
             key[i] = w[4 * round + i]; 
         }
         addRoundKey(pt, key); 
-    }  
-  
+    } 
+
+    cout << "<<<<<<<< ROUND 10 >>>>>>>>\n";
     substituteBytes(pt); 
     shiftRows(pt);  
     for(int i = 0; i < 4; i++)  
@@ -360,7 +382,9 @@ void inverseSubstituteBytes(bitset<8> ct[4*4]) {
         int row = ct[i][7] * 8 + ct[i][6] * 4 + ct[i][5] * 2 + ct[i][4];  
         int col = ct[i][3] * 8 + ct[i][2] * 4 + ct[i][1] * 2 + ct[i][0];  
         ct[i] = invSubBox[row][col];  
-    }  
+    } 
+    cout << endl << "After InverseSubstituteBytes\n"; 
+    printStateMatrix(ct);
 } 
   
 /* 
@@ -384,7 +408,10 @@ void inverseShiftRows(bitset<8> ct[4*4]) {
     for(int i = 0; i < 3; i++) {
         ct[i+12] = ct[i+13]; 
     }   
-    ct[15] = temp;  
+    ct[15] = temp; 
+
+    cout << endl << "After InverseShiftRows\n"; 
+    printStateMatrix(ct);
 } 
 
 void inverseMixColumns(bitset<8> ct[4*4]) {  
@@ -398,7 +425,9 @@ void inverseMixColumns(bitset<8> ct[4*4]) {
         ct[i + 4] = mulGF(0x09, arr[0]) ^ mulGF(0x0e, arr[1]) ^ mulGF(0x0b, arr[2]) ^ mulGF(0x0d, arr[3]); 
         ct[i + 8] = mulGF(0x0d, arr[0]) ^ mulGF(0x09, arr[1]) ^ mulGF(0x0e, arr[2]) ^ mulGF(0x0b, arr[3]); 
         ct[i + 12] = mulGF(0x0b, arr[0]) ^ mulGF(0x0d, arr[1]) ^ mulGF(0x09, arr[2]) ^ mulGF(0x0e, arr[3]); 
-    }  
+    } 
+    cout << endl << "After InverseMixColumns\n"; 
+    printStateMatrix(ct);
 }  
 
 
@@ -410,9 +439,11 @@ void decryptAES(bitset<8> ct[4*4], bitset<32> w[4*(rounds+1)]) {
     for(int i = 0; i < 4; i++) { 
         key[i] = w[4 * rounds + i]; 
     }
+    cout << "<<<<<<<< ROUND 0 >>>>>>>>\n\n";
     addRoundKey(ct, key); 
   
     for(int round = rounds - 1; round > 0; round--) { 
+    cout << "<<<<<<<< ROUND " << rounds - round << " >>>>>>>>\n";
         inverseShiftRows(ct); 
         inverseSubstituteBytes(ct); 
         for(int i = 0; i < 4; i++) { 
@@ -422,6 +453,7 @@ void decryptAES(bitset<8> ct[4*4], bitset<32> w[4*(rounds+1)]) {
         inverseMixColumns(ct); 
     } 
 
+    cout << "<<<<<<<< ROUND 10 >>>>>>>>\n";
     inverseShiftRows(ct); 
     inverseSubstituteBytes(ct); 
     for(int i = 0; i < 4; i++) { 

@@ -20,7 +20,7 @@ int main() {
     if(file.is_open()) {
         getline(file, hexKey);
         cout << "********** KEY **********" << endl << endl;
-        cout << "Key(HEX) : " << hexKey << endl;
+        cout << "Key(HEX) : " << hexKey << endl << endl;
         // Converting hex key into binary format
         binaryKey = convertHexToBin(hexKey);
     }
@@ -34,12 +34,16 @@ int main() {
     // structure here.
     bitset<8> key[16];
     
-    for(int j = 0, it = 0; j < nHex*4; j += 8, it++) {
+    for(int j = 0, it = 0; j < nHex * 4; j += 8, it++) {
         string frac = binaryKey.substr(j, 8);
-        cout << hexKey.size() << " : " << frac << endl;
         key[it] = bitset<8>(frac);
     }
-    cout << endl << "********** KEY **********" << endl << endl;
+    // transpose(key, 4);
+
+    // cout << "Key (State Matrix): \n\n";
+    // printStateMatrix(key);
+
+    cout << "********** KEY **********" << endl << endl;
     // ********** KEY RETRIEVAL AND EXPANSION ********** 
 
 
@@ -54,7 +58,7 @@ int main() {
         }
         // Converting hex string into binary string
         string binaryPT = convertHexToBin(block);
-        cout << "Input Block "<< c + 1 << " : " << block << endl;
+        cout << "Input Block "<< c + 1 << " : " << block << endl << endl;
 
         // Now, for calculation purposes, the plain-text too has to be converted 
         // into an array of bytes. Here too, we use the bitset data structure.
@@ -63,23 +67,19 @@ int main() {
             string frac = binaryPT.substr(j, 8);
             PT[it] = bitset<8>(frac);
         }
+        transpose(PT, 4);
 
         bitset<32> W[4 * (rounds + 1)]; 
         keyExpansion(key, W); 
 
-        cout << endl << "Plaintext to be encrypted:" << endl; 
-        for(int i = 0; i < 16; i++) { 
-            cout << uppercase << hex << PT[i].to_ulong() << " "; 
-            if((i + 1) % 4 == 0) 
-                cout << endl; 
-        } 
-        cout << endl;
+        cout << endl << endl << "Plaintext to be encrypted:" << endl << endl; 
+        printStateMatrix(PT);
 
         // ********** Encryption **********
         cout << "********** ENCRYPTION **********" << endl << endl;
         encryptAES(PT, W); 
-        cout << "Encrypted ciphertext : " << endl; 
-        printPT(PT);
+        cout << "***** Cipher-text after Encryption of the Plain-text ***** " << endl; 
+        printStateMatrix(PT);
         cout << endl;
         // ********** Encryption **********
 
@@ -87,8 +87,8 @@ int main() {
         // ********** Decryption **********
         cout << "********** DECRYPTION **********" << endl << endl;
         decryptAES(PT, W); 
-        cout << "Decrypted plaintext: "<< endl;  
-        printPT(PT);
+        cout << "***** Retrieved Plain-text after Decryption of the Cipher-text *****"<< endl;  
+        printStateMatrix(PT);
         // ********** Decryption **********
 
     }

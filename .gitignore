@@ -1,5 +1,7 @@
 .vscode/
 
+*/a.out
+
 PGP_Authentication/c
 
 PGP_Authentication/s
@@ -7,7 +9,4 @@ PGP_Authentication/s
 DES_Cipher-Block-Chaining-Mode/
 
 DES_Cipher-Feedback-Mode/
-
-*/a.out
-
 
